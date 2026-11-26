@@ -48,7 +48,6 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
     override fun render(): UiNode = UiColumnNode(
         spacingDp = 12,
         children = listOf(
-            UiTextNode("组件一览", style = UiTextStyle.Display),
             UiTextNode(
                 "这一页把所有能用的节点都摆了一遍：文字、按钮、列表项、输入框、图片、" +
                     "加载与空状态。界面全部由宿主渲染，插件只负责交数据。",

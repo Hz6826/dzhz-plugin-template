@@ -52,6 +52,8 @@ def main() -> None:
     parser.add_argument("-o", "--out", type=pathlib.Path, help="输出路径，默认 <id>-<version>.zip")
     parser.add_argument("-k", "--key", type=pathlib.Path, default=DEFAULT_KEY, help="签名私钥（P-256）")
     parser.add_argument("--manifest", type=pathlib.Path, default=MANIFEST_FILE, help="清单模板")
+    parser.add_argument("-v", "--version", help="覆盖清单里的 version")
+    parser.add_argument("-c", "--version-code", type=int, help="覆盖清单里的 versionCode")
     parser.add_argument("--extra", action="append", default=[],
                         help="额外的包内文件，写成 包内路径=本地路径，可以给多次（图标、头像等）")
     args = parser.parse_args()
@@ -79,6 +81,10 @@ def main() -> None:
         files.append({"path": name, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
         extras.append((name, data))
 
+    if args.version:
+        manifest["version"] = args.version
+    if args.version_code is not None:
+        manifest["versionCode"] = args.version_code
     manifest["files"] = files
     manifest["pubkey"] = public_key_b64(args.key)
 
