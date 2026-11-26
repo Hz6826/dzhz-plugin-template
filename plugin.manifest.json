@@ -61,6 +61,7 @@
             "description": "把你给的内容原样返回，用来确认小岱能调到这个插件。",
             "parameters": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "text": {
                   "type": "string",

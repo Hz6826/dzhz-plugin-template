@@ -70,7 +70,9 @@ python3 package.py plugin/build/outputs/apk/debug/plugin-debug.apk
 | `UiLoadingNode(text)` | 加载中 |
 | `UiEmptyNode(title, subtitle)` | 空状态 |
 
-工具（给小岱调用）：清单里 `dex.tools[].definition` 是给模型的 JSON schema，代码里 `PluginTool.execute(argsJson)` 返回一行文本。
+工具通过 `dex.tools[]` 声明。`name`、`definition.function.name` 和 `PluginTool.name()` 使用同一个原名，宿主会为模型生成唯一的工具标识。`echo` 要求一个字符串 `text`，通过参数校验后，宿主才调用 `PluginTool.execute(argsJson)`。
+
+`apiVersion` 要与目标盒子版本的 `PluginApi.VERSION` 一致。用空参数工具时可以省略 `parameters`。可用的 JSON Schema 关键字和调用约定见[宿主插件文档](https://github.com/xjtu-dzhz/dzhz/blob/dev/docs/plugins.md)。
 
 ## 签名与更新
 
