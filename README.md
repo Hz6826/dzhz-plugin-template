@@ -1,0 +1,74 @@
+# 岱宗盒子插件模板
+
+一个能直接跑起来的插件骨架：一个页面把所有宿主支持的界面组件都摆了一遍，照着改就是你的插件。
+
+- **不依赖 Compose**：界面用宿主给的 `UiNode` 描述，盒子自己用 miuix 渲染 —— 深色模式、主题色、字阶、圆角、动效自动跟盒子一致。
+- **一个小 APK**：整个插件约 2–3 MB，没有 Compose / lifecycle / 协程。
+- **包格式是 zip**：`dzhz.plugin.json` + `dzhz.plugin.sig` + 你的 APK，由 `package.py` 生成并签名。
+
+## 目录
+
+```
+plugin-api/       宿主 API 的副本（PluginApi.kt / PluginUi.kt），不要改
+plugin/           你的插件：TemplatePlugin / TemplatePage / TemplateTool
+plugin.manifest.json   清单模板（id、名字、页面、工具、版本号）
+package.py        打 zip 包 + 签名
+signing/          签名私钥（首次打包自动生成，不要提交）
+```
+
+## 三步
+
+**1. 改身份**。`plugin.manifest.json` 里的 `id`（小写字母开头，2–32 位，能带 `.` `_`）、`name`（1–14 字）、`author`；
+`plugin/build.gradle.kts` 里的 `namespace` / `applicationId`；
+`plugin/src/main/AndroidManifest.xml` 的 `android:label`；
+包名（`dev.dzhz.plugin.template`）改了就同步改源码目录和 `dex.entryClass`。
+
+**2. 写页面**。`TemplatePage.render()` 返回一棵 `UiNode` 树。状态放字段里，改完调 `invalidate()`；用户操作从 `onAction(actionId, value)` 回来。
+
+**3. 构建打包**。
+
+```bash
+./gradlew :plugin:assembleDebug
+python3 package.py plugin/build/outputs/apk/debug/plugin-debug.apk
+```
+
+产物是一个 zip。装进盒子：**插件 → 右上角设置 → 从文件安装**。
+
+## 能用的组件
+
+| 节点 | 作用 |
+|---|---|
+| `UiColumnNode(children, spacingDp)` | 竖排 |
+| `UiRowNode(children, spacingDp)` | 横排，子节点垂直居中 |
+| `UiTextNode(text, style, secondary, maxLines)` | 文字，`style` 有 Display / Title / Section / Body / Caption |
+| `UiCardNode(child)` | 卡片，里面放任意节点 |
+| `UiButtonNode(label, actionId, style, enabled)` | 按钮，三种外观 Filled / Tonal / Plain |
+| `UiListItemNode(title, subtitle, trailing, actionId)` | 设置页那种行 |
+| `UiFieldNode(label, value, actionId, hint)` | 输入框，每改一个字回传整段文本 |
+| `UiImageNode(url, heightDp)` | 网络图片（宿主用 Coil 加载） |
+| `UiDividerNode()` | 分隔线 |
+| `UiSpacerNode(heightDp)` | 留白 |
+| `UiLoadingNode(text)` | 加载中 |
+| `UiEmptyNode(title, subtitle)` | 空状态 |
+
+工具（给小岱调用）：清单里 `dex.tools[].definition` 是给模型的 JSON schema，代码里 `PluginTool.execute(argsJson)` 返回一行文本。
+
+## 签名与更新
+
+盒子对插件用 TOFU：**第一包装进来时记住签名者**（公钥 SPKI 的 sha256），之后同一个 `id` 的更新必须用同一把私钥签、`versionCode` 更大，否则拒装。
+
+所以：
+
+- `signing/plugin-ec.pem` 是你的身份，**别弄丢**，也别提交到仓库（`.gitignore` 已经挡了）；
+- 换机器就把这把钥匙拷过去；
+- 想换钥匙只能让用户先卸载再重装。
+
+## plugin-api 同步
+
+`plugin-api/` 是盒子仓库 `plugin/api/` 的副本。宿主加了节点或字段时，把这两个文件覆盖过来即可 —— 字段只增不改，旧插件不会被弄坏。
+
+## 注意
+
+- 插件和盒子同进程、同 uid 运行，**权限等同 App**，能读到登录会话和本地数据。只装你信任来源的插件。
+- 插件页在主线程 `render()`，别在里面做网络请求或读大文件；数据提前取好放字段里。
+- 断网时 `UiImageNode` 会显示占位块，这是正常的。

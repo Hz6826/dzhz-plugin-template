@@ -1,0 +1,11 @@
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+.DS_Store
+
+# 打包私钥：自己生成、自己留着，绝对不要提交
+signing/*.pem
+*.zip
+!gradle/wrapper/gradle-wrapper.jar

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 插件不会安装进系统，宿主只是用 DexClassLoader 读这个 APK 里的类，
+         所以这里不需要 Activity，只要一个能被解析、能验签名的 application 节点。 -->
+    <application
+        android:hasCode="true"
+        android:label="插件模板" />
+</manifest>
