@@ -79,10 +79,10 @@ val syncPluginApi by tasks.registering(SyncPluginApiTask::class) {
     rawBases.set(
         listOf(
             // raw 优先：CI 在 GitHub runner 上一定通，拿到的也是当前分支最新内容
-            "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/dev" +
+            "https://raw.githubusercontent.com/xjtu-dzhz/dzhz/dev" +
                 "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
             // jsDelivr 兜底：国内访问 raw 经常不通，缺点是分支内容有缓存（可能是几小时前的）
-            "https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@dev" +
+            "https://cdn.jsdelivr.net/gh/xjtu-dzhz/dzhz@dev" +
                 "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
         ),
     )

@@ -98,4 +98,4 @@ python3 package.py plugin/build/outputs/apk/debug/plugin-debug.apk
 
 ## 许可证
 
-[GPL-3.0](./LICENSE)，和盒子本体 [yeliqin666/xjtu-toolbox-android](https://github.com/yeliqin666/xjtu-toolbox-android) 一致。
+[GPL-3.0](./LICENSE)，和盒子本体 [xjtu-dzhz/dzhz](https://github.com/xjtu-dzhz/dzhz) 一致。

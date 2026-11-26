@@ -9,8 +9,8 @@ set -euo pipefail
 
 BRANCH="${PLUGIN_API_BRANCH:-dev}"
 # 国内访问 raw.githubusercontent.com 经常不通，先试 jsDelivr 镜像
-MIRROR="https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
-RAW="https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
+MIRROR="https://cdn.jsdelivr.net/gh/xjtu-dzhz/dzhz@${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
+RAW="https://raw.githubusercontent.com/xjtu-dzhz/dzhz/${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 DIR="${ROOT}/plugin-api/src/main/java/com/xjtu/toolbox/plugin/api"
