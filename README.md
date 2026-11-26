@@ -63,9 +63,13 @@ python3 package.py plugin/build/outputs/apk/debug/plugin-debug.apk
 - 换机器就把这把钥匙拷过去；
 - 想换钥匙只能让用户先卸载再重装。
 
-## plugin-api 同步
+## plugin-api 是副本（不在本仓库里）
 
-`plugin-api/` 是盒子仓库 `plugin/api/` 的副本。宿主加了节点或字段时，把这两个文件覆盖过来即可 —— 字段只增不改，旧插件不会被弄坏。
+`plugin-api/src/main/java/.../api/` 下的 `PluginApi.kt` 和 `PluginUi.kt` **不在本仓库里**（`.gitignore` 挡了），它们是构建时从盒子仓库拉的副本：
+
+- 平时不用管：`./gradlew :plugin:assembleDebug` 之前会自动补上缺的文件；
+- 想立刻刷新到最新一份：`./sync-api.sh`，或者 `./gradlew :plugin-api:syncPluginApi -PsyncApi`；
+- **不要在这两个文件里改东西**——宿主加了节点或字段，请去改盒子仓库的 `plugin/api/`，这边重新拉就同步了。字段只增不改，旧插件不会被弄坏。
 
 ## 注意
 

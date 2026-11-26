@@ -9,3 +9,6 @@ local.properties
 signing/*.pem
 *.zip
 !gradle/wrapper/gradle-wrapper.jar
+
+# 插件 API 是宿主仓库的副本，构建时自动拉取，不进本仓库
+plugin-api/src/main/java/com/xjtu/toolbox/plugin/api/*.kt
