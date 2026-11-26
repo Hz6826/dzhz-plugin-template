@@ -9,6 +9,7 @@ import top.dzhz.plugin.template.pages.AboutPage
 import top.dzhz.plugin.template.pages.BackendPage
 import top.dzhz.plugin.template.pages.DisplayPage
 import top.dzhz.plugin.template.pages.InputPage
+import top.dzhz.plugin.template.pages.LayoutPage
 import top.dzhz.plugin.template.pages.TextPage
 
 /**
@@ -27,6 +28,7 @@ private class TemplatePluginImpl(private val ctx: PluginContext) : Plugin {
         TextPage(ctx),
         InputPage(ctx),
         DisplayPage(ctx),
+        LayoutPage(ctx),
         BackendPage(ctx),
         AboutPage(ctx),
     )
