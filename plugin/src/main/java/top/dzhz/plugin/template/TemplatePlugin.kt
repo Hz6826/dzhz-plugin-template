@@ -15,9 +15,15 @@ class TemplatePlugin : PluginEntry {
 }
 
 private class TemplatePluginImpl(private val ctx: PluginContext) : Plugin {
-    private val page = TemplatePage(ctx)
+    // 清单里每个页面一个实例；侧栏目录也来自清单，插件不用管导航
+    private val pages = listOf(
+        TemplatePage(ctx, "home"),
+        TemplatePage(ctx, "text"),
+        TemplatePage(ctx, "data"),
+        TemplatePage(ctx, "about"),
+    )
 
-    override fun pages(): List<PluginPage> = listOf(page)
+    override fun pages(): List<PluginPage> = pages
 
     override fun tools(): List<PluginTool> = listOf(TemplateTool(ctx))
 }

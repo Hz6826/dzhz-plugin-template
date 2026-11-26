@@ -3,8 +3,8 @@
   "id": "top.dzhz.plugin.template",
   "name": "插件模板",
   "summary": "一个把宿主支持的所有界面组件都摆一遍的模板插件，照着改就是你的插件",
-  "version": "0.1.2",
-  "versionCode": 5,
+  "version": "0.2.0",
+  "versionCode": 6,
   "minAppVersionCode": 101,
   "author": {
     "name": "你的名字",
@@ -19,7 +19,22 @@
     "pages": [
       {
         "id": "home",
-        "title": "组件一览"
+        "title": "组件一览",
+        "group": "基础"
+      },
+      {
+        "id": "text",
+        "title": "文字与样式",
+        "group": "基础"
+      },
+      {
+        "id": "data",
+        "title": "数据与图标",
+        "group": "进阶"
+      },
+      {
+        "id": "about",
+        "title": "关于"
       }
     ],
     "tools": [

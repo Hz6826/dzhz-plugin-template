@@ -2,6 +2,8 @@ package top.dzhz.plugin.template
 
 import com.xjtu.toolbox.plugin.api.PluginContext
 import com.xjtu.toolbox.plugin.api.PluginPage
+import com.xjtu.toolbox.plugin.api.UiBadgeNode
+import com.xjtu.toolbox.plugin.api.UiBadgeTone
 import com.xjtu.toolbox.plugin.api.UiButtonNode
 import com.xjtu.toolbox.plugin.api.UiButtonStyle
 import com.xjtu.toolbox.plugin.api.UiCardNode
@@ -9,30 +11,40 @@ import com.xjtu.toolbox.plugin.api.UiColumnNode
 import com.xjtu.toolbox.plugin.api.UiDividerNode
 import com.xjtu.toolbox.plugin.api.UiEmptyNode
 import com.xjtu.toolbox.plugin.api.UiFieldNode
+import com.xjtu.toolbox.plugin.api.UiGridNode
 import com.xjtu.toolbox.plugin.api.UiIconNode
 import com.xjtu.toolbox.plugin.api.UiImageNode
-import com.xjtu.toolbox.plugin.api.UiOption
-import com.xjtu.toolbox.plugin.api.UiSelectNode
+import com.xjtu.toolbox.plugin.api.UiKeyValueNode
 import com.xjtu.toolbox.plugin.api.UiListItemNode
 import com.xjtu.toolbox.plugin.api.UiLoadingNode
 import com.xjtu.toolbox.plugin.api.UiNode
+import com.xjtu.toolbox.plugin.api.UiOption
+import com.xjtu.toolbox.plugin.api.UiProgressNode
+import com.xjtu.toolbox.plugin.api.UiRichTextNode
 import com.xjtu.toolbox.plugin.api.UiRowNode
+import com.xjtu.toolbox.plugin.api.UiSelectNode
 import com.xjtu.toolbox.plugin.api.UiSpacerNode
+import com.xjtu.toolbox.plugin.api.UiSwitchNode
+import com.xjtu.toolbox.plugin.api.UiTextColor
 import com.xjtu.toolbox.plugin.api.UiTextNode
+import com.xjtu.toolbox.plugin.api.UiTextSpan
 import com.xjtu.toolbox.plugin.api.UiTextStyle
 
 /**
  * 模板页：把宿主支持的所有 [UiNode] 都摆一遍，照着抄就行。
  *
- * 这个页面里**一行 Compose 都没有**——插件只交回数据，宿主用自己的组件画，
- * 所以深色模式、主题色、字阶、圆角都自动跟盒子一致。
+ * 一个类同时是好几个页面（清单里 `pages[]` 的每一项）——宿主按 id 打开对应实例，
+ * 侧栏目录也从清单生成，插件不用写任何导航代码。
  *
  * 写法要点：
  * - 状态放在字段里，`@Volatile` 因为宿主可能在别的线程拿；
  * - 改完字段调一次 `invalidate()`，宿主会重新要一次 [render]；
  * - [render] 在主线程被调用，别在里面做 IO。
  */
-internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
+internal class TemplatePage(
+    private val ctx: PluginContext,
+    private val pageId: String = "home",
+) : PluginPage() {
 
     @Volatile
     private var count = 0
@@ -48,24 +60,54 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
     @Volatile
     private var term = "2026-2027-1"
 
-    override fun id(): String = "home"
+    @Volatile
+    private var reminder = true
 
-    override fun title(): String = "组件一览"
+    override fun id(): String = pageId
 
-    override fun render(): UiNode = UiColumnNode(
+    override fun title(): String = when (pageId) {
+        "text" -> "文字与样式"
+        "data" -> "数据与图标"
+        "about" -> "关于"
+        else -> "组件一览"
+    }
+
+    override fun render(): UiNode = when (pageId) {
+        "text" -> textPage()
+        "data" -> dataPage()
+        "about" -> aboutPage()
+        else -> homePage()
+    }
+
+    override fun onAction(actionId: String, value: String?) {
+        when (actionId) {
+            "count" -> count++
+            "reset" -> count = 0
+            "name" -> name = value.orEmpty()
+            "row_click" -> ctx.toast("列表项被点了")
+            "text_click" -> ctx.toast("可点击文本被点了")
+            "rich_click" -> ctx.toast("富文本里的链接被点了")
+            "term" -> term = value.orEmpty()
+            "reminder" -> reminder = value == "true"
+            else -> ctx.log("未处理的动作：$actionId")
+        }
+        // 改完状态必须 invalidate，宿主才会重新要一次 render()
+        invalidate()
+    }
+
+    // ── 组件一览 ────────────────────────────────────────────────────────────
+
+    private fun homePage(): UiNode = UiColumnNode(
         spacingDp = 12,
         children = listOf(
             UiTextNode(
-                "这一页把所有能用的节点都摆了一遍：文字、按钮、列表项、输入框、图片、" +
-                    "加载与空状态。界面全部由宿主渲染，插件只负责交数据。",
+                "这一页把常用的节点摆了一遍；文字样式、图标和数据类节点在左边目录的另外两页。",
                 secondary = true,
             ),
             textCard(),
             buttonCard(),
             listCard(),
             fieldCard(),
-            imageCard(),
-            iconCard(),
             selectCard(),
             stateCard(),
             UiSpacerNode(4),
@@ -77,24 +119,6 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
             ),
         ),
     )
-
-    override fun onAction(actionId: String, value: String?) {
-        when (actionId) {
-            "count" -> count++
-            "reset" -> count = 0
-            "name" -> name = value.orEmpty()
-            "row_click" -> ctx.toast("列表项被点了")
-            "term" -> term = value.orEmpty()
-            "loading" -> state = 1
-            "empty" -> state = 2
-            "normal" -> state = 0
-            else -> ctx.log("未处理的动作：$actionId")
-        }
-        // 改完状态必须 invalidate，宿主才会重新要一次 render()
-        invalidate()
-    }
-
-    // ── 各个分区 ────────────────────────────────────────────────────────────
 
     private fun textCard(): UiNode = UiCardNode(
         UiColumnNode(
@@ -113,6 +137,28 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
                         "后面的内容会被省略号吃掉，用来演示截断效果。",
                     maxLines = 2,
                 ),
+                UiDividerNode(),
+                // 富文本：一段话里混样式和链接，段与段之间没有间距
+                UiRichTextNode(
+                    spans = listOf(
+                        UiTextSpan("这一段是混排："),
+                        UiTextSpan("加粗", bold = true),
+                        UiTextSpan("、"),
+                        UiTextSpan("斜体", italic = true),
+                        UiTextSpan("、"),
+                        UiTextSpan("下划线", underline = true),
+                        UiTextSpan("、"),
+                        UiTextSpan("删除线", strikeThrough = true),
+                        UiTextSpan("，还能嵌一个 "),
+                        UiTextSpan("点我", color = UiTextColor.Primary, underline = true, actionId = "rich_click"),
+                        UiTextSpan(" 这样的链接。"),
+                    ),
+                ),
+                UiTextNode(
+                    "这段文字整段可点（actionId），不用做成按钮。",
+                    color = UiTextColor.Primary,
+                    actionId = "text_click",
+                ),
             ),
         ),
     )
@@ -123,20 +169,16 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
             children = listOf(
                 UiTextNode("按钮", style = UiTextStyle.Section),
                 UiTextNode(
-                    "三种外观 Filled / Tonal / Plain，都能用 enabled = false 置灰。" +
-                        "点击通过 onAction(actionId, value) 回到插件。",
+                    "Filled / Tonal 两种外观，enabled = false 置灰；四个按钮放一排。" +
+                        "更轻的操作用可点击文本，别都做成按钮。",
                     style = UiTextStyle.Caption,
                     secondary = true,
                 ),
                 UiRowNode(
+                    spacingDp = 8,
                     children = listOf(
                         UiButtonNode("主要", "count"),
                         UiButtonNode("次要", "count", style = UiButtonStyle.Tonal),
-                        UiButtonNode("文字", "count", style = UiButtonStyle.Plain),
-                    ),
-                ),
-                UiRowNode(
-                    children = listOf(
                         UiButtonNode("禁用", "count", enabled = false),
                         UiButtonNode("清零", "reset", style = UiButtonStyle.Tonal),
                     ),
@@ -181,61 +223,6 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
         ),
     )
 
-    private fun imageCard(): UiNode = UiCardNode(
-        UiColumnNode(
-            spacingDp = 8,
-            children = listOf(
-                UiTextNode("图片", style = UiTextStyle.Section),
-                UiTextNode("宿主用 Coil 加载网络图片，失败时显示占位块。", style = UiTextStyle.Caption, secondary = true),
-                UiImageNode(url = "https://picsum.photos/id/1025/900/420", heightDp = 150),
-            ),
-        ),
-    )
-
-    /** 图标：名字来自宿主白名单，不在名单里画灰色占位。 */
-    private fun iconCard(): UiNode = UiCardNode(
-        UiColumnNode(
-            spacingDp = 10,
-            children = listOf(
-                UiTextNode("图标", style = UiTextStyle.Section),
-                UiTextNode(
-                    "名字是宿主白名单里的语义名（calendar、card、book…），不是图标库的类名。",
-                    style = UiTextStyle.Caption,
-                    secondary = true,
-                ),
-                UiRowNode(
-                    spacingDp = 18,
-                    children = listOf(
-                        iconItem("calendar", "课表"),
-                        iconItem("grade", "成绩"),
-                        iconItem("book", "图书馆"),
-                        iconItem("card", "校园卡"),
-                        iconItem("bell", "通知"),
-                    ),
-                ),
-                UiRowNode(
-                    spacingDp = 18,
-                    children = listOf(
-                        iconItem("exam", "考试"),
-                        iconItem("seat", "座位"),
-                        iconItem("bus", "校车"),
-                        iconItem("warning", "警告"),
-                        iconItem("not_in_list", "未知"),
-                    ),
-                ),
-            ),
-        ),
-    )
-
-    private fun iconItem(name: String, label: String): UiNode = UiColumnNode(
-        spacingDp = 6,
-        children = listOf(
-            UiIconNode(name),
-            UiTextNode(label, style = UiTextStyle.Caption, secondary = true),
-        ),
-    )
-
-    /** 下拉单选：回传的是 key，不是下标。 */
     private fun selectCard(): UiNode {
         val options = listOf(
             UiOption("2026-2027-1", "2026–2027 学年 第一学期"),
@@ -253,12 +240,7 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
                         style = UiTextStyle.Caption,
                         secondary = true,
                     ),
-                    UiSelectNode(
-                        label = "学期",
-                        value = term,
-                        options = options,
-                        actionId = "term",
-                    ),
+                    UiSelectNode(label = "学期", value = term, options = options, actionId = "term"),
                     UiTextNode(
                         if (current == null) "当前：$term" else "当前：$current",
                         style = UiTextStyle.Caption,
@@ -286,6 +268,235 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
                         UiButtonNode("复原", "normal", style = UiButtonStyle.Plain),
                     ),
                 ),
+            ),
+        ),
+    )
+
+    // ── 文字与样式 ──────────────────────────────────────────────────────────
+
+    private fun textPage(): UiNode = UiColumnNode(
+        spacingDp = 12,
+        children = listOf(
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 8,
+                    children = listOf(
+                        UiTextNode("颜色", style = UiTextStyle.Section),
+                        UiTextNode("Default：跟主题走", color = UiTextColor.Default),
+                        UiTextNode("Secondary：次要信息", color = UiTextColor.Secondary),
+                        UiTextNode("Primary：主色", color = UiTextColor.Primary),
+                        UiTextNode("Success：成功", color = UiTextColor.Success),
+                        UiTextNode("Warning：警告", color = UiTextColor.Warning),
+                        UiTextNode("Error：错误", color = UiTextColor.Error),
+                        UiTextNode(
+                            "argb 直接给颜色（0xFFFF8800），深浅色要插件自己适配。",
+                            argb = 0xFFFF8800.toInt(),
+                            style = UiTextStyle.Caption,
+                        ),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 8,
+                    children = listOf(
+                        UiTextNode("样式", style = UiTextStyle.Section),
+                        UiTextNode("加粗 bold = true", bold = true),
+                        UiTextNode("斜体 italic = true", italic = true),
+                        UiTextNode("下划线 underline = true", underline = true),
+                        UiTextNode("删除线 strikeThrough = true", strikeThrough = true),
+                        UiTextNode("几个可以叠在一起", bold = true, italic = true, underline = true),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 8,
+                    children = listOf(
+                        UiTextNode("可点击文本", style = UiTextStyle.Section),
+                        UiTextNode(
+                            "actionId 非空时整段可点，比按钮轻；适合「查看全部 ›」这种。",
+                            style = UiTextStyle.Caption,
+                            secondary = true,
+                        ),
+                        UiTextNode("点我一下", color = UiTextColor.Primary, actionId = "text_click"),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 8,
+                    children = listOf(
+                        UiTextNode("富文本混排", style = UiTextStyle.Section),
+                        UiTextNode(
+                            "同一段话里混不同样式和链接，段与段之间没有间距。",
+                            style = UiTextStyle.Caption,
+                            secondary = true,
+                        ),
+                        UiRichTextNode(
+                            spans = listOf(
+                                UiTextSpan("成绩已更新："),
+                                UiTextSpan("高等数学 92", bold = true),
+                                UiTextSpan("、"),
+                                UiTextSpan("线性代数 88", bold = true),
+                                UiTextSpan("，"),
+                                UiTextSpan("查看详情", color = UiTextColor.Primary, underline = true, actionId = "rich_click"),
+                                UiTextSpan("。"),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    // ── 数据与图标 ──────────────────────────────────────────────────────────
+
+    private val iconNames = listOf(
+        "calendar" to "课表",
+        "grade" to "成绩",
+        "book" to "图书馆",
+        "card" to "校园卡",
+        "bell" to "通知",
+        "school" to "教务",
+        "exam" to "考试",
+        "task" to "作业",
+        "classroom" to "教室",
+        "seat" to "座位",
+        "canteen" to "食堂",
+        "bus" to "校车",
+        "doc" to "文档",
+        "download" to "下载",
+        "upload" to "上传",
+        "user" to "用户",
+        "time" to "时间",
+        "star" to "收藏",
+        "warning" to "警告",
+        "check" to "完成",
+        // 不在白名单里的名字：宿主画灰色占位图标，不崩
+        "not_in_list" to "未知",
+    )
+
+    private fun dataPage(): UiNode = UiColumnNode(
+        spacingDp = 12,
+        children = listOf(
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 10,
+                    children = listOf(
+                        UiTextNode("图标（${iconNames.size} 个）", style = UiTextStyle.Section),
+                        UiTextNode(
+                            "名字取自宿主白名单，语义名，不是图标库的类名；不在名单里的画灰色占位。",
+                            style = UiTextStyle.Caption,
+                            secondary = true,
+                        ),
+                        UiGridNode(
+                            columns = 3,
+                            children = iconNames.map { (name, label) -> iconItem(name, label) },
+                        ),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 6,
+                    children = listOf(
+                        UiTextNode("键值行", style = UiTextStyle.Section),
+                        UiKeyValueNode("学号", "2023012345"),
+                        UiKeyValueNode("本学期学分", "23.5"),
+                        UiKeyValueNode("绩点", "3.82", secondary = true),
+                        UiKeyValueNode("校园卡余额", "¥ 86.40"),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 10,
+                    children = listOf(
+                        UiTextNode("进度条", style = UiTextStyle.Section),
+                        UiProgressNode(value = 0.68f, label = "借阅额度 13/20"),
+                        UiProgressNode(value = 0.24f, label = "本月消费 ¥24 / ¥100"),
+                        UiProgressNode(value = 1f, label = "已完成"),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 10,
+                    children = listOf(
+                        UiTextNode("徽章", style = UiTextStyle.Section),
+                        UiRowNode(
+                            children = listOf(
+                                UiBadgeNode("可预约"),
+                                UiBadgeNode("已满", UiBadgeTone.Warning),
+                                UiBadgeNode("已选", UiBadgeTone.Accent),
+                                UiBadgeNode("待缴费", UiBadgeTone.Neutral),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 10,
+                    children = listOf(
+                        UiTextNode("开关行", style = UiTextStyle.Section),
+                        UiSwitchNode(
+                            label = "每天提醒",
+                            summary = "早上八点推一条当天的课",
+                            checked = reminder,
+                            actionId = "reminder",
+                        ),
+                    ),
+                ),
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 8,
+                    children = listOf(
+                        UiTextNode("可点的卡片", style = UiTextStyle.Section),
+                        UiTextNode("整张卡可点，按下有反馈；比塞一个按钮自然。", style = UiTextStyle.Caption, secondary = true),
+                    ),
+                ),
+                actionId = "card_click",
+            ),
+        ),
+    )
+
+    private fun iconItem(name: String, label: String): UiNode = UiColumnNode(
+        spacingDp = 6,
+        children = listOf(
+            UiIconNode(name),
+            UiTextNode(label, style = UiTextStyle.Caption, secondary = true),
+        ),
+    )
+
+    // ── 关于 ────────────────────────────────────────────────────────────────
+
+    private fun aboutPage(): UiNode = UiColumnNode(
+        spacingDp = 12,
+        children = listOf(
+            UiTextNode(
+                "这是岱宗盒子的插件模板。左边目录里的每一页都是清单 `pages[]` 里的一项，" +
+                    "插件只负责返回界面树，导航、顶栏、主题都交给宿主。",
+                secondary = true,
+            ),
+            UiCardNode(
+                UiColumnNode(
+                    spacingDp = 8,
+                    children = listOf(
+                        UiTextNode("怎么改成你自己的", style = UiTextStyle.Section),
+                        UiListItemNode(title = "1. 改 plugin.manifest.json", subtitle = "id、名字、作者、版本号"),
+                        UiListItemNode(title = "2. 改 plugin/build.gradle.kts", subtitle = "namespace 和 applicationId"),
+                        UiListItemNode(title = "3. 写页面", subtitle = "TemplatePage.render() 返回 UiNode 树"),
+                        UiListItemNode(title = "4. 打包", subtitle = "python3 package.py <apk>"),
+                    ),
+                ),
+            ),
+            UiTextNode(
+                "插件 id ${ctx.pluginId} · App ${ctx.appVersionCode}",
+                style = UiTextStyle.Caption,
+                secondary = true,
             ),
         ),
     )
