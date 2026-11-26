@@ -3,7 +3,15 @@
 //
 // 为什么是副本而不是依赖：插件只需要跟着当前宿主走，不需要版本化的 maven 坐标；
 // 等 API 冻结了再发到 jitpack。
+import java.io.File
 import java.net.URI
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 
 plugins {
     id("com.android.library")
@@ -24,28 +32,51 @@ android {
     }
 }
 
-// ── 自动同步宿主 API ────────────────────────────────────────────────────────
-// 分支合并到 main 之后，把下面的 feat/plugin-zip 换成 main。
-val apiRawBase = "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/feat/plugin-zip" +
-    "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
-val apiFileNames = listOf("PluginApi.kt", "PluginUi.kt")
-val apiDirPath = layout.projectDirectory.dir("src/main/java/com/xjtu/toolbox/plugin/api").asFile.absolutePath
-val forceSync = providers.gradleProperty("syncApi").isPresent
+/**
+ * 从宿主仓库拉插件 API。用自定义 task 而不是在 `doLast` 里闭包捕获脚本变量：
+ * 后者会让配置缓存没法序列化（Gradle 9 直接报错）。
+ */
+abstract class SyncPluginApiTask : DefaultTask() {
 
-val syncPluginApi by tasks.registering {
-    group = "plugin"
-    description = "从宿主仓库拉最新的插件 API（缺文件时自动，-PsyncApi 强制）"
-    doLast {
-        val dir = File(apiDirPath).apply { mkdirs() }
-        apiFileNames.forEach { name ->
-            val target = File(dir, name)
-            if (!forceSync && target.isFile && target.length() > 0L) return@forEach
-            val url = URI("$apiRawBase/$name").toURL()
-            println("同步插件 API：$name")
-            url.openStream().use { input -> target.outputStream().use { input.copyTo(it) } }
-            require(target.length() > 0L) { "拉 $name 失败：内容是空的" }
+    @get:Input
+    abstract val rawBase: Property<String>
+
+    @get:Input
+    abstract val fileNames: ListProperty<String>
+
+    /** true = 不管本地有没有都重新拉。 */
+    @get:Input
+    abstract val force: Property<Boolean>
+
+    @get:OutputDirectory
+    abstract val target: DirectoryProperty
+
+    @TaskAction
+    fun sync() {
+        val dir = target.get().asFile.apply { mkdirs() }
+        fileNames.get().forEach { name ->
+            val out = File(dir, name)
+            if (!force.get() && out.isFile && out.length() > 0L) return@forEach
+            logger.lifecycle("同步插件 API：$name")
+            URI("${rawBase.get()}/$name").toURL().openStream().use { input ->
+                out.outputStream().use { input.copyTo(it) }
+            }
+            require(out.length() > 0L) { "拉 $name 失败：内容是空的" }
         }
     }
+}
+
+// 分支合并到 main 之后，把下面的 feat/plugin-zip 换成 main。
+val syncPluginApi by tasks.registering(SyncPluginApiTask::class) {
+    group = "plugin"
+    description = "从宿主仓库拉最新的插件 API（缺文件时自动，-PsyncApi 强制）"
+    rawBase.set(
+        "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/feat/plugin-zip" +
+            "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
+    )
+    fileNames.set(listOf("PluginApi.kt", "PluginUi.kt"))
+    force.set(providers.gradleProperty("syncApi").isPresent)
+    target.set(layout.projectDirectory.dir("src/main/java/com/xjtu/toolbox/plugin/api"))
 }
 
 tasks.named("preBuild") { dependsOn(syncPluginApi) }
