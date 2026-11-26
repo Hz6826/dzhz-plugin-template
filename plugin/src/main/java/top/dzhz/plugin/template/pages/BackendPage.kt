@@ -102,6 +102,8 @@ internal class BackendPage(private val ctx: PluginContext) : PluginPage() {
                 val error = obj.optString("error")
                 when {
                     !ok -> "失败：$error"
+                    // 工具把「没登录 / 网络不通」这类情况写在 text 里，ok 仍然是 true
+                    text.startsWith("error:") -> "取数失败（多半是没登录或网络不通）：\n\n${text.take(200)}"
                     widgets > 0 -> "取到 $widgets 张结构化卡片。\n\n${text.take(200)}"
                     else -> "这个工具没有结构化卡片，只有文本：\n\n${text.take(200)}"
                 }
