@@ -98,14 +98,23 @@ internal class BackendPage(private val ctx: PluginContext) : PluginPage() {
                 val obj = JSONObject(json)
                 val ok = obj.optBoolean("ok")
                 val text = obj.optString("text")
-                val widgets = obj.optJSONArray("widgets")?.length() ?: 0
                 val error = obj.optString("error")
+                val widgets = obj.optJSONArray("widgets")
+                val count = widgets?.length() ?: 0
                 when {
                     !ok -> "失败：$error"
                     // 工具把「没登录 / 网络不通」这类情况写在 text 里，ok 仍然是 true
                     text.startsWith("error:") -> "取数失败（多半是没登录或网络不通）：\n\n${text.take(200)}"
-                    widgets > 0 -> "取到 $widgets 张结构化卡片。\n\n${text.take(200)}"
-                    else -> "这个工具没有结构化卡片，只有文本：\n\n${text.take(200)}"
+                    count > 0 -> {
+                        // 真正给界面用的是这些卡片：每张都有 type（schedule / grades / rooms…）和结构化字段
+                        val first = widgets?.optJSONObject(0)
+                        val type = first?.optString("type").orEmpty()
+                        buildString {
+                            append("取到 $count 张结构化卡片，第一张 type = \"$type\"：\n\n")
+                            append(first?.toString(2)?.take(360).orEmpty())
+                        }
+                    }
+                    else -> "这个工具没有结构化卡片，只有文本（给小岱看的）：\n\n${text.take(200)}"
                 }
             }.getOrElse { "返回的不是预期 JSON：${json.take(120)}" }
             result = parsed
