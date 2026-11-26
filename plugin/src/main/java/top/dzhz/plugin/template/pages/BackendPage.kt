@@ -64,10 +64,11 @@ internal class BackendPage(private val ctx: PluginContext) : PluginPage() {
             ),
             section(
                 "通知",
-                "走宿主统一的渠道，不用自己建 NotificationChannel；同一个插件后一条盖前一条",
+                "走宿主统一的渠道；普通通知不弹窗，headsUp = true 才会悬浮出来",
                 UiRowNode(
                     children = listOf(
-                        UiButtonNode("发一条通知", "notify", style = UiButtonStyle.Tonal),
+                        UiButtonNode("普通通知", "notify", style = UiButtonStyle.Tonal),
+                        UiButtonNode("悬浮提醒", "notify_heads_up"),
                     ),
                 ),
             ),
@@ -82,7 +83,12 @@ internal class BackendPage(private val ctx: PluginContext) : PluginPage() {
             "fetch_schedule" -> fetch("get_schedule")
             "fetch_card" -> fetch("get_card_info")
             "read_file" -> readFile()
-            "notify" -> ctx.notify("插件模板", "这条通知来自插件，不是盒子本身。")
+            "notify" -> ctx.notify("插件模板", "这条通知来自插件，不会弹窗。")
+            "notify_heads_up" -> ctx.notify(
+                "插件模板",
+                "这条是悬浮提醒：抢到课、余额不足这种事才该用它。",
+                headsUp = true,
+            )
         }
     }
 
