@@ -14,10 +14,10 @@ class TemplatePlugin : PluginEntry {
     override fun create(context: PluginContext): Plugin = TemplatePluginImpl(context)
 }
 
-private class TemplatePluginImpl(context: PluginContext) : Plugin {
-    private val page = TemplatePage(context)
+private class TemplatePluginImpl(private val ctx: PluginContext) : Plugin {
+    private val page = TemplatePage(ctx)
 
     override fun pages(): List<PluginPage> = listOf(page)
 
-    override fun tools(): List<PluginTool> = listOf(TemplateTool(context))
+    override fun tools(): List<PluginTool> = listOf(TemplateTool(ctx))
 }
