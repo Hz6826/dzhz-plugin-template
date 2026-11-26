@@ -72,7 +72,7 @@ internal class LayoutPage(private val ctx: PluginContext) : PluginPage() {
                     ).map { UiBadgeNode(it) },
                 ),
             ),
-            caption("布局容器都会吃满可用宽度；要"按内容"就用横滑行或者流式换行。"),
+            caption("布局容器都会吃满可用宽度；要「按内容」就用横滑行或者流式换行。"),
         ),
     )
 
