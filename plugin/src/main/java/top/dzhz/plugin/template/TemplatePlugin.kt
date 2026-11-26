@@ -5,22 +5,30 @@ import com.xjtu.toolbox.plugin.api.PluginContext
 import com.xjtu.toolbox.plugin.api.PluginEntry
 import com.xjtu.toolbox.plugin.api.PluginPage
 import com.xjtu.toolbox.plugin.api.PluginTool
+import top.dzhz.plugin.template.pages.AboutPage
+import top.dzhz.plugin.template.pages.BackendPage
+import top.dzhz.plugin.template.pages.DisplayPage
+import top.dzhz.plugin.template.pages.InputPage
+import top.dzhz.plugin.template.pages.TextPage
 
 /**
  * 插件入口：清单里 `dex.entryClass` 指向这里，必须有无参构造。
- * 宿主每个插件只建一份 [Plugin]，页面和工具都从它取。
+ *
+ * 这里列出所有页面；侧栏目录由清单 `pages[]` 生成（`group` 相同归到一组），
+ * 插件不用写任何导航代码。
  */
 class TemplatePlugin : PluginEntry {
     override fun create(context: PluginContext): Plugin = TemplatePluginImpl(context)
 }
 
 private class TemplatePluginImpl(private val ctx: PluginContext) : Plugin {
-    // 清单里每个页面一个实例；侧栏目录也来自清单，插件不用管导航
+
     private val pages = listOf(
-        TemplatePage(ctx, "home"),
-        TemplatePage(ctx, "text"),
-        TemplatePage(ctx, "data"),
-        TemplatePage(ctx, "about"),
+        TextPage(ctx),
+        InputPage(ctx),
+        DisplayPage(ctx),
+        BackendPage(ctx),
+        AboutPage(ctx),
     )
 
     override fun pages(): List<PluginPage> = pages

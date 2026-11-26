@@ -27,6 +27,7 @@ SIGNING_DIR = ROOT / "signing"
 DEFAULT_KEY = SIGNING_DIR / "plugin-ec.pem"
 MANIFEST_FILE = ROOT / "plugin.manifest.json"
 APK_ENTRY = "plugin.apk"
+EXTRA_DIR = ROOT / "extra"
 
 
 def openssl(*args, stdin=None):
@@ -72,6 +73,15 @@ def main() -> None:
     }]
 
     extras = []
+    # extra/ 目录里的东西原样打进包（配置、示例数据、插件自己的资源）
+    if EXTRA_DIR.is_dir():
+        for local_path in sorted(EXTRA_DIR.rglob("*")):
+            if local_path.is_file():
+                name = local_path.relative_to(EXTRA_DIR).as_posix()
+                data = local_path.read_bytes()
+                files.append({"path": name, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
+                extras.append((name, data))
+
     for spec in args.extra:
         name, _, local = spec.partition("=")
         local_path = pathlib.Path(local or name)

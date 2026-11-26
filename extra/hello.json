@@ -1,0 +1,5 @@
+{
+  "hello": "这是打在插件包里的一个普通文件，插件用 openPackageFile(\"hello.json\") 读它。",
+  "why": "插件自带的配置、示例数据、说明文件都可以这么打包",
+  "version": 1
+}
