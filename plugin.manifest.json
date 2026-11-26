@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "id": "dev.dzhz.plugin.template",
+  "id": "top.dzhz.plugin.template",
   "name": "插件模板",
   "summary": "一个把宿主支持的所有界面组件都摆一遍的模板插件，照着改就是你的插件",
   "version": "0.1.0",
@@ -15,7 +15,7 @@
   "apiVersion": 2,
   "dex": {
     "apk": "plugin.apk",
-    "entryClass": "dev.dzhz.plugin.template.TemplatePlugin",
+    "entryClass": "top.dzhz.plugin.template.TemplatePlugin",
     "pages": [
       {
         "id": "home",

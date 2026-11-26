@@ -21,7 +21,7 @@ signing/          签名私钥（首次打包自动生成，不要提交）
 **1. 改身份**。`plugin.manifest.json` 里的 `id`（小写字母开头，2–32 位，能带 `.` `_`）、`name`（1–14 字）、`author`；
 `plugin/build.gradle.kts` 里的 `namespace` / `applicationId`；
 `plugin/src/main/AndroidManifest.xml` 的 `android:label`；
-包名（`dev.dzhz.plugin.template`）改了就同步改源码目录和 `dex.entryClass`。
+包名（`top.dzhz.plugin.template`）改了就同步改源码目录和 `dex.entryClass`。
 
 **2. 写页面**。`TemplatePage.render()` 返回一棵 `UiNode` 树。状态放字段里，改完调 `invalidate()`；用户操作从 `onAction(actionId, value)` 回来。
 

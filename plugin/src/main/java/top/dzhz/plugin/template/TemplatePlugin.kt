@@ -1,4 +1,4 @@
-package dev.dzhz.plugin.template
+package top.dzhz.plugin.template
 
 import com.xjtu.toolbox.plugin.api.Plugin
 import com.xjtu.toolbox.plugin.api.PluginContext

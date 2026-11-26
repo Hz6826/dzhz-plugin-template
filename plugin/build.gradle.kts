@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "dev.dzhz.plugin.template"
+    namespace = "top.dzhz.plugin.template"
     compileSdk {
         version = release(37) {
         }
     }
     defaultConfig {
-        applicationId = "dev.dzhz.plugin.template"
+        applicationId = "top.dzhz.plugin.template"
         minSdk = 31
         targetSdk = 36
         versionCode = 3
