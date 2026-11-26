@@ -3,8 +3,8 @@
   "id": "top.dzhz.plugin.template",
   "name": "插件模板",
   "summary": "一个把宿主支持的所有界面组件都摆一遍的模板插件，照着改就是你的插件",
-  "version": "0.1.0",
-  "versionCode": 3,
+  "version": "0.1.1",
+  "versionCode": 4,
   "minAppVersionCode": 101,
   "author": {
     "name": "你的名字",

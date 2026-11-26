@@ -9,7 +9,10 @@ import com.xjtu.toolbox.plugin.api.UiColumnNode
 import com.xjtu.toolbox.plugin.api.UiDividerNode
 import com.xjtu.toolbox.plugin.api.UiEmptyNode
 import com.xjtu.toolbox.plugin.api.UiFieldNode
+import com.xjtu.toolbox.plugin.api.UiIconNode
 import com.xjtu.toolbox.plugin.api.UiImageNode
+import com.xjtu.toolbox.plugin.api.UiOption
+import com.xjtu.toolbox.plugin.api.UiSelectNode
 import com.xjtu.toolbox.plugin.api.UiListItemNode
 import com.xjtu.toolbox.plugin.api.UiLoadingNode
 import com.xjtu.toolbox.plugin.api.UiNode
@@ -41,6 +44,10 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
     @Volatile
     private var state = 0
 
+    /** 下拉选中的 key。 */
+    @Volatile
+    private var term = "2026-2027-1"
+
     override fun id(): String = "home"
 
     override fun title(): String = "组件一览"
@@ -58,6 +65,8 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
             listCard(),
             fieldCard(),
             imageCard(),
+            iconCard(),
+            selectCard(),
             stateCard(),
             UiSpacerNode(4),
             UiDividerNode(),
@@ -75,6 +84,7 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
             "reset" -> count = 0
             "name" -> name = value.orEmpty()
             "row_click" -> ctx.toast("列表项被点了")
+            "term" -> term = value.orEmpty()
             "loading" -> state = 1
             "empty" -> state = 2
             "normal" -> state = 0
@@ -181,6 +191,83 @@ internal class TemplatePage(private val ctx: PluginContext) : PluginPage() {
             ),
         ),
     )
+
+    /** 图标：名字来自宿主白名单，不在名单里画灰色占位。 */
+    private fun iconCard(): UiNode = UiCardNode(
+        UiColumnNode(
+            spacingDp = 10,
+            children = listOf(
+                UiTextNode("图标", style = UiTextStyle.Section),
+                UiTextNode(
+                    "名字是宿主白名单里的语义名（calendar、card、book…），不是图标库的类名。",
+                    style = UiTextStyle.Caption,
+                    secondary = true,
+                ),
+                UiRowNode(
+                    spacingDp = 18,
+                    children = listOf(
+                        iconItem("calendar", "课表"),
+                        iconItem("grade", "成绩"),
+                        iconItem("book", "图书馆"),
+                        iconItem("card", "校园卡"),
+                        iconItem("bell", "通知"),
+                    ),
+                ),
+                UiRowNode(
+                    spacingDp = 18,
+                    children = listOf(
+                        iconItem("exam", "考试"),
+                        iconItem("seat", "座位"),
+                        iconItem("bus", "校车"),
+                        iconItem("warning", "警告"),
+                        iconItem("not_in_list", "未知"),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    private fun iconItem(name: String, label: String): UiNode = UiColumnNode(
+        spacingDp = 6,
+        children = listOf(
+            UiIconNode(name),
+            UiTextNode(label, style = UiTextStyle.Caption, secondary = true),
+        ),
+    )
+
+    /** 下拉单选：回传的是 key，不是下标。 */
+    private fun selectCard(): UiNode {
+        val options = listOf(
+            UiOption("2026-2027-1", "2026–2027 学年 第一学期"),
+            UiOption("2025-2026-2", "2025–2026 学年 第二学期"),
+            UiOption("2025-2026-1", "2025–2026 学年 第一学期"),
+        )
+        val current = options.firstOrNull { it.key == term }?.label
+        return UiCardNode(
+            UiColumnNode(
+                spacingDp = 10,
+                children = listOf(
+                    UiTextNode("下拉单选", style = UiTextStyle.Section),
+                    UiTextNode(
+                        "最多 8 个选项，再多就该自己开一页；选中的 key 通过 onAction 回来。",
+                        style = UiTextStyle.Caption,
+                        secondary = true,
+                    ),
+                    UiSelectNode(
+                        label = "学期",
+                        value = term,
+                        options = options,
+                        actionId = "term",
+                    ),
+                    UiTextNode(
+                        if (current == null) "当前：$term" else "当前：$current",
+                        style = UiTextStyle.Caption,
+                        secondary = true,
+                    ),
+                ),
+            ),
+        )
+    }
 
     private fun stateCard(): UiNode = UiCardNode(
         UiColumnNode(
