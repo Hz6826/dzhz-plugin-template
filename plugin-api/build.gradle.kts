@@ -3,6 +3,8 @@
 //
 // 为什么是副本而不是依赖：插件只需要跟着当前宿主走，不需要版本化的 maven 坐标；
 // 等 API 冻结了再发到 jitpack。
+import java.net.URI
+
 plugins {
     id("com.android.library")
 }
@@ -38,7 +40,7 @@ val syncPluginApi by tasks.registering {
         apiFileNames.forEach { name ->
             val target = File(dir, name)
             if (!forceSync && target.isFile && target.length() > 0L) return@forEach
-            val url = java.net.URI("$apiRawBase/$name").toURL()
+            val url = URI("$apiRawBase/$name").toURL()
             println("同步插件 API：$name")
             url.openStream().use { input -> target.outputStream().use { input.copyTo(it) } }
             require(target.length() > 0L) { "拉 $name 失败：内容是空的" }
