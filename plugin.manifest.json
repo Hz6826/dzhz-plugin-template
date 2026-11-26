@@ -21,7 +21,8 @@
         "id": "text",
         "title": "文字与样式",
         "group": "基础",
-        "home": true
+        "icon": "doc",
+        "iconColor": "#7C4DFF"
       },
       {
         "id": "input",
@@ -32,7 +33,7 @@
         "id": "display",
         "title": "数据展示",
         "group": "进阶",
-        "home": true
+        "icon": "check"
       },
       {
         "id": "layout",
@@ -46,7 +47,8 @@
       },
       {
         "id": "about",
-        "title": "关于"
+        "title": "关于",
+        "shortcut": false
       }
     ],
     "tools": [
