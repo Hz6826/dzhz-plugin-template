@@ -4,10 +4,10 @@
 # 平时不用手动跑：Gradle 构建前发现文件不在会自动拉（见 plugin-api/build.gradle.kts）。
 # 想立刻刷新成最新一份，用它，或者 ./gradlew :plugin-api:syncPluginApi -PsyncApi。
 #
-# 宿主那边合并到 main 之后，把 BRANCH 改成 main。
+# 插件 API 跟着宿主的 dev 分支走；等 dev 合进 main 再改成 main。
 set -euo pipefail
 
-BRANCH="${PLUGIN_API_BRANCH:-feat/plugin-zip}"
+BRANCH="${PLUGIN_API_BRANCH:-dev}"
 # 国内访问 raw.githubusercontent.com 经常不通，先试 jsDelivr 镜像
 MIRROR="https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
 RAW="https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"

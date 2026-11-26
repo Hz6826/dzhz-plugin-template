@@ -72,16 +72,17 @@ abstract class SyncPluginApiTask : DefaultTask() {
     }
 }
 
-// 分支合并到 main 之后，把下面的 feat/plugin-zip 换成 main。
+// 插件 API 跟着宿主的 dev 分支走；等 dev 合进 main 再换成 main。
 val syncPluginApi by tasks.registering(SyncPluginApiTask::class) {
     group = "plugin"
     description = "从宿主仓库拉最新的插件 API（缺文件时自动，-PsyncApi 强制）"
     rawBases.set(
         listOf(
-            // jsDelivr 镜像：国内能通，缺点是分支内容有缓存（拉到的可能是几小时前的）
-            "https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@feat/plugin-zip" +
+            // raw 优先：CI 在 GitHub runner 上一定通，拿到的也是当前分支最新内容
+            "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/dev" +
                 "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
-            "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/feat/plugin-zip" +
+            // jsDelivr 兜底：国内访问 raw 经常不通，缺点是分支内容有缓存（可能是几小时前的）
+            "https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@dev" +
                 "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
         ),
     )
