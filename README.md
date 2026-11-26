@@ -95,3 +95,7 @@ python3 package.py plugin/build/outputs/apk/debug/plugin-debug.apk
 - 插件和盒子同进程、同 uid 运行，**权限等同 App**，能读到登录会话和本地数据。只装你信任来源的插件。
 - 插件页在主线程 `render()`，别在里面做网络请求或读大文件；数据提前取好放字段里。
 - 断网时 `UiImageNode` 会显示占位块，这是正常的。
+
+## 许可证
+
+[GPL-3.0](./LICENSE)，和盒子本体 [yeliqin666/xjtu-toolbox-android](https://github.com/yeliqin666/xjtu-toolbox-android) 一致。
