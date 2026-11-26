@@ -14,8 +14,8 @@ android {
         applicationId = "top.dzhz.plugin.template"
         minSdk = 31
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.4.1"
+        versionCode = 12
+        versionName = "1.0.0"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
