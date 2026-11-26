@@ -8,7 +8,9 @@
 set -euo pipefail
 
 BRANCH="${PLUGIN_API_BRANCH:-feat/plugin-zip}"
-BASE="https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
+# 国内访问 raw.githubusercontent.com 经常不通，先试 jsDelivr 镜像
+MIRROR="https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
+RAW="https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/${BRANCH}/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api"
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 DIR="${ROOT}/plugin-api/src/main/java/com/xjtu/toolbox/plugin/api"
@@ -16,7 +18,10 @@ mkdir -p "${DIR}"
 
 for f in PluginApi.kt PluginUi.kt; do
   echo "拉取 ${f}（分支 ${BRANCH}）"
-  curl -fsSL "${BASE}/${f}" -o "${DIR}/${f}"
+  if ! curl -fsSL --max-time 30 "${MIRROR}/${f}" -o "${DIR}/${f}"; then
+    echo "  镜像不通，改用 GitHub raw"
+    curl -fsSL --max-time 30 "${RAW}/${f}" -o "${DIR}/${f}"
+  fi
   test -s "${DIR}/${f}"
 done
 

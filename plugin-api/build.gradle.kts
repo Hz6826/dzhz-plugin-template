@@ -38,8 +38,9 @@ android {
  */
 abstract class SyncPluginApiTask : DefaultTask() {
 
+    /** 依次尝试的下载源：国内访问 raw.githubusercontent.com 经常不通，先用 jsDelivr 镜像。 */
     @get:Input
-    abstract val rawBase: Property<String>
+    abstract val rawBases: ListProperty<String>
 
     @get:Input
     abstract val fileNames: ListProperty<String>
@@ -57,11 +58,16 @@ abstract class SyncPluginApiTask : DefaultTask() {
         fileNames.get().forEach { name ->
             val out = File(dir, name)
             if (!force.get() && out.isFile && out.length() > 0L) return@forEach
-            logger.lifecycle("同步插件 API：$name")
-            URI("${rawBase.get()}/$name").toURL().openStream().use { input ->
-                out.outputStream().use { input.copyTo(it) }
+            val ok = rawBases.get().any { base ->
+                runCatching {
+                    URI("$base/$name").toURL().openStream().use { input ->
+                        out.outputStream().use { input.copyTo(it) }
+                    }
+                    out.length() > 0L
+                }.getOrDefault(false)
             }
-            require(out.length() > 0L) { "拉 $name 失败：内容是空的" }
+            require(ok) { "拉 $name 失败：所有下载源都不通（检查网络，或者用 ./sync-api.sh）" }
+            logger.lifecycle("同步插件 API：$name")
         }
     }
 }
@@ -70,9 +76,14 @@ abstract class SyncPluginApiTask : DefaultTask() {
 val syncPluginApi by tasks.registering(SyncPluginApiTask::class) {
     group = "plugin"
     description = "从宿主仓库拉最新的插件 API（缺文件时自动，-PsyncApi 强制）"
-    rawBase.set(
-        "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/feat/plugin-zip" +
-            "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
+    rawBases.set(
+        listOf(
+            // jsDelivr 镜像：国内能通，缺点是分支内容有缓存（拉到的可能是几小时前的）
+            "https://cdn.jsdelivr.net/gh/yeliqin666/xjtu-toolbox-android@feat/plugin-zip" +
+                "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
+            "https://raw.githubusercontent.com/yeliqin666/xjtu-toolbox-android/feat/plugin-zip" +
+                "/plugin/api/src/main/java/com/xjtu/toolbox/plugin/api",
+        ),
     )
     fileNames.set(listOf("PluginApi.kt", "PluginUi.kt"))
     force.set(providers.gradleProperty("syncApi").isPresent)
