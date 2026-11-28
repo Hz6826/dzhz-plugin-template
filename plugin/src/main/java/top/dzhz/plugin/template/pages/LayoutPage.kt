@@ -8,6 +8,7 @@ import com.xjtu.toolbox.plugin.api.UiButtonNode
 import com.xjtu.toolbox.plugin.api.UiButtonStyle
 import com.xjtu.toolbox.plugin.api.UiCardNode
 import com.xjtu.toolbox.plugin.api.UiColumnNode
+import com.xjtu.toolbox.plugin.api.UiFillWidthNode
 import com.xjtu.toolbox.plugin.api.UiFlowRowNode
 import com.xjtu.toolbox.plugin.api.UiNode
 import com.xjtu.toolbox.plugin.api.UiRowNode
@@ -30,7 +31,7 @@ internal class LayoutPage(private val ctx: PluginContext) : PluginPage() {
         children = listOf(
             section(
                 "对齐",
-                "Column 的 alignment；Row 还有 horizontal / vertical 两个方向",
+                "Column 的 alignment；Row 还有 horizontal / vertical 两个方向。外面套了 UiFillWidthNode，不然整列只有按钮那么宽，看不出区别",
                 alignDemo("Start", UiAlign.Start),
                 alignDemo("Center", UiAlign.Center),
                 alignDemo("End", UiAlign.End),
@@ -72,16 +73,18 @@ internal class LayoutPage(private val ctx: PluginContext) : PluginPage() {
                     ).map { UiBadgeNode(it) },
                 ),
             ),
-            caption("布局容器都会吃满可用宽度；要「按内容」就用横滑行或者流式换行。"),
+            caption("Column / Row 默认只有「最宽子节点」那么宽；要撑满可用宽度套一层 UiFillWidthNode，要「按内容」就用横滑行或者流式换行。"),
         ),
     )
 
-    private fun alignDemo(label: String, align: UiAlign): UiNode = UiColumnNode(
-        spacingDp = 6,
-        alignment = align,
-        children = listOf(
-            UiTextNode(label, style = UiTextStyle.Caption, secondary = true),
-            UiButtonNode("按钮", "noop", style = UiButtonStyle.Tonal),
+    private fun alignDemo(label: String, align: UiAlign): UiNode = UiFillWidthNode(
+        UiColumnNode(
+            spacingDp = 6,
+            alignment = align,
+            children = listOf(
+                UiTextNode(label, style = UiTextStyle.Caption, secondary = true),
+                UiButtonNode("按钮", "noop", style = UiButtonStyle.Tonal),
+            ),
         ),
     )
 
